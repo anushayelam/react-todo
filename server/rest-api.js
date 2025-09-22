@@ -1,0 +1,95 @@
+var express=require("express");
+var cors=require("cors");
+const { mongoClient } = require("mongodb");
+var MongoClient=require("mongodb").MongoClient;
+
+var conString ="mongodb://127.0.0.1:27017";
+
+var app =express();
+app.use(cors());
+app.use(express.urlencoded({extended:true}));
+app.use(express.json());
+
+
+//Server Side Routes
+
+app.post("/register-user",(req,res)=>{
+     var user ={
+        UserId:req.body.UserId,
+        UserName:req.body.UserName,
+        Password:req.body.Password,
+        Email:req.body.Email,
+        Mobile:req.body.Mobile
+     }
+     MongoClient.connect(conString).then(clientObject=>{
+        var database=clientObject.db("react-todo");
+        database.collection("users").insertOne(user).then(()=>{
+         console.log(`User Registered`);
+           res.end();
+        });
+     });
+});
+
+app.get("/get-users",(req,res)=>{
+
+   MongoClient.connect(conString).then(clientObject=>{
+      var database=clientObject.db("react-todo");
+      database.collection("users").find({}).toArray().then(documents=>{
+            res.send(documents);
+            res.end();
+      })
+      });
+   });
+   app.post("/add-task",(req,res)=>{
+      var task ={
+         Appointment_Id:parseInt(req.body.Appointment_Id),
+         Title:req.body.Title,
+         Description : req.body.Description,
+         Date : new Date(req.body.Date),
+         UserId: req.UserId
+      }
+
+ 
+      MongoClient.connect(conString).then(clientObject=>{
+         var database=clientObject.db("react-todo");
+         database.collection("appointments").insertOne(task).then(()=>{
+          console.log(`Task Added`);
+            res.end();
+         });
+      });
+ });
+   
+ app.get("/view-tasks/:user_id",(req,res)=>{
+
+   MongoClient.connect(conString).then(clientObject=>{
+      var database=clientObject.db("react-todo");
+      database.collection("appointments").find({UserId:req.params.user_id}).toArray().then(documents=>{
+            res.send(documents);
+            res.end();
+      })
+      });
+   });
+
+   app.put("/edit-task/:id",(req,res)=>{
+
+      var id
+   })
+
+
+      
+   app.delete("/delete-tasks/:id",(req,res)=>{
+
+      var id = parseInt(req.params.id);
+
+      MongoClient.connect(conString).then(clientObject => {
+         var database = clientObject.db("react-todo");
+         database.collection("appointments").deleteOne({Appointment_Id:id})
+         .then(()=>{
+            console.log("task Deleted");
+            res.end();
+         })
+      })
+   })
+app.listen(6060);
+console.log(`server started : http://127.0.0.1:6060`);
+
